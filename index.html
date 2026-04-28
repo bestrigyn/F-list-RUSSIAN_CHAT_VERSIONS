@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>F-list Rust Client</title>
+  <link rel="modulepreload" href="/F-list-RUSSIAN_CHAT_VERSIONS/flist-russian-chat-2192244d958f8431.js" crossorigin="anonymous" integrity="sha384-J/m8dgSYCYI1iwgnCC00LMkGKpVIKeJV3vPOMfekGGhsas9Dcr8lULYFHNKmYQhe"><link rel="preload" href="/F-list-RUSSIAN_CHAT_VERSIONS/flist-russian-chat-2192244d958f8431_bg.wasm" crossorigin="anonymous" integrity="sha384-OHdzBSZY/iyhaJJn8w2GABl839i57ZccpKzpNHVI7zVCC0NPhbwt/7A5tUcNsgcT" as="fetch" type="application/wasm"></head>
+  <body>
+<script type="module">
+import init, * as bindings from '/F-list-RUSSIAN_CHAT_VERSIONS/flist-russian-chat-2192244d958f8431.js';
+const wasm = await init({ module_or_path: '/F-list-RUSSIAN_CHAT_VERSIONS/flist-russian-chat-2192244d958f8431_bg.wasm' });
+
+
+window.wasmBindings = bindings;
+
+
+dispatchEvent(new CustomEvent("TrunkApplicationStarted", {detail: {wasm}}));
+
+</script></body>
+</html>
