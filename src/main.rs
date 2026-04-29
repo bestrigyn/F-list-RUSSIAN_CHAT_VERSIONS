@@ -1,79 +1,30 @@
-use leptos::*;
+// Добавь эти сигналы в начало функции App
+let (account, set_account) = create_signal(String::new());
+let (password, set_password) = create_signal(String::new());
+let (is_loading, set_is_loading) = create_signal(false);
 
-#[component]
-fn App() -> impl IntoView {
-    // Состояние авторизации: None — не вошел, Some(String) — ник игрока
-    let (user_name, set_user_name) = create_signal(None::<String>);
-
-    view! {
-        <div style="background: #1b1b1b; color: #e0e0e0; min-height: 100vh; font-family: Arial, sans-serif;">
-            
-            // ВЕРХНЯЯ ПАНЕЛЬ (Header)
-            <nav style="display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background: #2a2a2a; border-bottom: 2px solid #ff4444;">
-                
-                // Левая часть: Вход или Ник
-                <div>
-                    {move || match user_name.get() {
-                        None => view! {
-                            <button 
-                                on:click=move |_| {
-                                    // Тут позже будет логика вызова API для проверки тикета
-                                    set_user_name.set(Some("Semyon".to_string())); 
-                                }
-                                style="background: #444; color: white; border: 1px solid #666; padding: 5px 15px; cursor: pointer; border-radius: 3px;">
-                                "Вход"
-                            </button>
-                        }.into_view(),
-                        Some(name) => view! {
-                            <span style="font-weight: bold; color: #ff4444;">{name}</span>
-                        }.into_view(),
-                    }}
-                </div>
-
-                // Центр: Твой логотип
-                <div style="text-align: center;">
-                    <h2 style="margin: 0; font-size: 1.2rem; letter-spacing: 1px;">"RUSSIAN CHAT VERSIONS"</h2>
-                </div>
-
-                // Правая часть: Кнопка Выход (появляется только если залогинен)
-                <div style="width: 80px; text-align: right;">
-                    {move || user_name.get().is_some().then(|| view! {
-                        <button 
-                            on:click=move |_| set_user_name.set(None)
-                            style="background: transparent; color: #888; border: none; cursor: pointer; text-decoration: underline;">
-                            "Выход"
-                        </button>
-                    })}
-                </div>
-            </nav>
-
-            // ОСНОВНОЙ КОНТЕНТ (Сетка как на оригинале)
-            <main style="display: flex; height: calc(100vh - 50px);">
-                
-                // Слева: Список каналов
-                <aside style="width: 200px; background: #252525; border-right: 1px solid #333; padding: 10px;">
-                    <p style="font-size: 0.8rem; color: #666;">"КАНАЛЫ"</p>
-                </aside>
-
-                // Центр: Окно чата
-                <section style="flex-grow: 1; padding: 20px; background: #1b1b1b; display: flex; flex-direction: column;">
-                    <div style="flex-grow: 1; border: 1px solid #333; background: #141414; margin-bottom: 10px; border-radius: 5px;">
-                        // Тут будут сообщения
-                    </div>
-                    <input type="text" placeholder="Написать сообщение..." 
-                        style="width: 100%; padding: 10px; background: #2a2a2a; border: 1px solid #444; color: white; border-radius: 5px;"/>
-                </section>
-
-                // Справа: Список персонажей
-                <aside style="width: 200px; background: #252525; border-left: 1px solid #333; padding: 10px;">
-                    <p style="font-size: 0.8rem; color: #666;">"В СЕТИ"</p>
-                </aside>
-
-            </main>
+// В Header, там где была кнопка "Вход", замени на это:
+{move || match user_name.get() {
+    None => view! {
+        <div style="display: flex; gap: 5px;">
+            <input type="text" placeholder="Логин" 
+                on:input=move |ev| set_account.set(event_value(&ev))
+                style="background: #333; border: 1px solid #555; color: white; padding: 2px 5px; width: 100px;"/>
+            <input type="password" placeholder="Пароль" 
+                on:input=move |ev| set_password.set(event_value(&ev))
+                style="background: #333; border: 1px solid #555; color: white; padding: 2px 5px; width: 100px;"/>
+            <button 
+                on:click=move |_| {
+                    set_is_loading.set(true);
+                    // СЮДА мы завтра пропишем fetch запрос к API f-list
+                    log!("Попытка входа для: {}", account.get());
+                }
+                style="background: #ff4444; color: white; border: none; padding: 2px 10px; cursor: pointer;">
+                {move || if is_loading.get() { "..." } else { "Войти" }}
+            </button>
         </div>
-    }
-}
-
-fn main() {
-    mount_to_body(App);
-}
+    }.into_view(),
+    Some(name) => view! {
+        <span style="font-weight: bold; color: #ff4444;">{name}</span>
+    }.into_view(),
+}}
