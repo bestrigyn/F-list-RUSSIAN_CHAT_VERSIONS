@@ -2,7 +2,7 @@ use leptos::*;
 use web_sys::Storage;
 
 // Попытка получить доступ к локальному хранилищу
-fn get_storage() -> Option<Storage> {
+fn get_storage() -> Option<web_sys::Storage> {
     window().local_storage().ok().flatten()
 }
 
