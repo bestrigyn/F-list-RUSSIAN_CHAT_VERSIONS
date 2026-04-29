@@ -1,42 +1,59 @@
 use leptos::*;
+use wasm_bindgen::prelude::*;
+use web_sys::{MessageEvent};
 
 #[component]
 fn App() -> impl IntoView {
     let (user_name, set_user_name) = create_signal(None::<String>);
 
-    // Теперь максимально просто, чтобы Rust не ругался
+    // Создаем замыкание для обработки сообщений от окна логина
+    let on_message = {
+        let set_user_name = set_user_name.clone();
+        Closure::wrap(Box::new(move |ev: MessageEvent| {
+            if let Some(data_str) = ev.data().as_string() {
+                // Если пришло сообщение с ником, сохраняем его
+                if data_str.starts_with("login:") {
+                    let nick = data_str.replace("login:", "");
+                    set_user_name.set(Some(nick));
+                }
+            }
+        }) as Box<dyn FnMut(MessageEvent)>)
+    };
+
     let open_login_window = move |_| {
-        let win = window(); // Просто берем окно
-        // Используем правильный метод с 3 параметрами для размера окна
+        let win = window();
+        
+        // Устанавливаем слушатель, чтобы поймать ответ от F-list
+        let _ = win.add_event_listener_with_callback(
+            "message", 
+            on_message.as_ref().unchecked_ref()
+        );
+        on_message.forget(); // Чтобы Rust не удалил обработчик из памяти
+
         let _ = win.open_with_url_and_target_and_features(
             "https://www.f-list.net/login.php", 
-            "_blank", 
+            "login_popup", 
             "width=500,height=600"
         );
-        set_user_name.set(Some("Авторизация...".to_string()));
+        set_user_name.set(Some("Ожидание входа...".to_string()));
     };
 
     view! {
         <div style="background: #121212; color: #eee; min-height: 100vh; font-family: sans-serif;">
-            
-            // ШАПКА
-            <nav style="display: flex; justify-content: space-between; align-items: center; padding: 15px 30px; background: #1f1f1f; border-bottom: 2px solid #d62d2d; box-shadow: 0 2px 10px rgba(0,0,0,0.5);">
-                <h2 style="margin: 0; color: #d62d2d; font-weight: 800; letter-spacing: 1px;">"F-LIST RUSSIAN"</h2>
-                
+            <nav style="display: flex; justify-content: space-between; align-items: center; padding: 15px 30px; background: #1f1f1f; border-bottom: 2px solid #d62d2d;">
+                <h2 style="margin: 0; color: #d62d2d;">"RUSSIAN CHAT"</h2>
                 <div>
                     {move || match user_name.get() {
                         None => view! {
-                            <button on:click=open_login_window
-                                style="background: #d62d2d; color: white; border: none; padding: 10px 25px; cursor: pointer; border-radius: 5px; font-weight: bold; box-shadow: 0 0 15px rgba(214,45,45,0.3);">
-                                "ВОЙТИ ЧЕРЕЗ F-LIST"
+                            <button on:click=open_login_window style="background: #d62d2d; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 5px;">
+                                "ВХОД"
                             </button>
                         }.into_view(),
                         Some(name) => view! {
-                            <div style="display: flex; gap: 20px; align-items: center;">
-                                <span style="color: #4cd137; font-weight: bold;">{name}</span>
-                                <button on:click=move |_| set_user_name.set(None)
-                                    style="background: #333; color: #aaa; border: none; padding: 5px 15px; cursor: pointer; border-radius: 4px;">
-                                    "Выход"
+                            <div style="display: flex; gap: 15px; align-items: center;">
+                                <span style="color: #4cd137;">"Привет, " {name} "!"</span>
+                                <button on:click=move |_| set_user_name.set(None) style="background: #444; color: #ccc; border: none; padding: 5px 10px; cursor: pointer;">
+                                    "Выйти"
                                 </button>
                             </div>
                         }.into_view(),
@@ -44,26 +61,13 @@ fn App() -> impl IntoView {
                 </div>
             </nav>
 
-            // ОСНОВНОЙ БЛОК
-            <div style="display: flex; padding: 30px; gap: 25px; max-width: 1200px; margin: 0 auto;">
-                <main style="flex: 2; background: #1a1a1a; padding: 25px; border-radius: 12px; border: 1px solid #333; min-height: 450px; text-align: center;">
-                    <h3 style="color: #d62d2d;">"Система готова к работе"</h3>
-                    <p style="color: #888;">"Нажми на кнопку входа в шапке, чтобы открыть окно авторизации."</p>
-                </main>
-
-                // ТВOЙ HTML-ПОМОЩНИК
-                <aside style="flex: 1; min-width: 300px; background: #1f1f1f; padding: 20px; border-radius: 12px; border: 1px solid #d62d2d;">
-                    <h4 style="margin-top: 0; color: #4cd137; display: flex; align-items: center; gap: 10px;">
-                        <span>"🛠️"</span> "ТЕХ-ОТДЕЛ"
-                    </h4>
-                    <div style="font-size: 0.85rem; line-height: 1.6; color: #bbb;">
-                        <p style="background: #252525; padding: 10px; border-radius: 6px; border-left: 3px solid #d62d2d;">
-                            "Ошибка E0277 была в лишней команде .as_ref(). В Rust если объект уже существует, не надо спрашивать, есть ли он."
-                        </p>
-                        <p><b>"План:"</b> " Сейчас билд должен пройти. После входа браузер предложит тебе сохранить пароль."</p>
-                    </div>
-                </aside>
-            </div>
+            <main style="padding: 40px; text-align: center;">
+                {move || if user_name.get().is_none() {
+                    view! { <p>"Пожалуйста, авторизуйтесь через всплывающее окно."</p> }.into_view()
+                } else {
+                    view! { <h1 style="color: #4cd137;">"Вы успешно вошли!"</h1> }.into_view()
+                }}
+            </main>
         </div>
     }
 }
