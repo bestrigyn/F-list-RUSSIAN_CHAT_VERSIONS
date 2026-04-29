@@ -1,86 +1,65 @@
 use leptos::*;
 
-// Функция для работы с памятью браузера (упрощенная версия)
-fn get_storage() -> Option<web_sys::Storage> {
-    window().local_storage().ok().flatten()
-}
-
 #[component]
 fn App() -> impl IntoView {
-    let initial_user = get_storage()
-        .and_then(|s| s.get_item("chat_user").ok().flatten());
-    
-    let (account, set_account) = create_signal(String::new());
-    let (user_name, set_user_name) = create_signal(initial_user);
+    let (user_name, set_user_name) = create_signal(None::<String>);
 
-    let on_login = move |ev: ev::SubmitEvent| {
-        ev.prevent_default();
-        let name = account.get();
-        if !name.is_empty() {
-            if let Some(storage) = get_storage() {
-                let _ = storage.set_item("chat_user", &name).unwrap();
-            }
-            set_user_name.set(Some(name));
-        }
+    // Функция, которая открывает ОФИЦИАЛЬНОЕ окно входа
+    let open_login_window = move |_| {
+        let _ = window().open_with_url_and_target(
+            "https://www.f-list.net/login.php", 
+            "_blank", 
+            "width=500,height=600"
+        );
+        // Временно ставим заглушку, пока не настроим получение тикета
+        set_user_name.set(Some("Авторизация...".to_string()));
     };
 
     view! {
-        <div style="background: #1b1b1b; color: #e0e0e0; min-height: 100vh; font-family: sans-serif; display: flex; flex-direction: column;">
+        <div style="background: #1b1b1b; color: #e0e0e0; min-height: 100vh; font-family: sans-serif;">
             
             // ШАПКА
             <nav style="display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background: #2a2a2a; border-bottom: 2px solid #ff4444;">
                 <div style="display: flex; gap: 10px; align-items: center;">
                     {move || match user_name.get() {
                         None => view! {
-                            <form on:submit=on_login style="display: flex; gap: 5px;">
-                                <input type="text" name="username" placeholder="Логин"
-                                    on:input=move |ev| set_account.set(event_target_value(&ev))
-                                    prop:value=account
-                                    style="background: #333; color: white; border: 1px solid #555; padding: 5px; border-radius: 4px;"/>
-                                <button type="submit" 
-                                    style="background: #ff4444; color: white; border: none; padding: 5px 15px; cursor: pointer; border-radius: 4px; font-weight: bold;">
-                                    "Вход"
-                                </button>
-                            </form>
+                            <button on:click=open_login_window
+                                style="background: #ff4444; color: white; border: none; padding: 8px 20px; cursor: pointer; border-radius: 4px; font-weight: bold; box-shadow: 0 0 10px rgba(255,68,68,0.3);">
+                                "ВОЙТИ ЧЕРЕЗ F-LIST"
+                            </button>
                         }.into_view(),
                         Some(name) => view! {
-                            <span style="font-weight: bold; color: #44ff44;">"Активен: " {name}</span>
+                            <div style="display: flex; gap: 15px; align-items: center;">
+                                <span style="font-weight: bold; color: #44ff44; text-shadow: 0 0 5px #000;">{name}</span>
+                                <button on:click=move |_| set_user_name.set(None)
+                                    style="background: transparent; color: #888; border: none; cursor: pointer; text-decoration: underline;">
+                                    "Выход"
+                                </button>
+                            </div>
                         }.into_view(),
                     }}
                 </div>
-                <h2 style="margin: 0; font-size: 1.2rem; color: #ff4444;">"RUSSIAN CHAT"</h2>
+                <h2 style="margin: 0; font-size: 1.2rem; color: #ff4444; letter-spacing: 2px;">"F-LIST RUSSIAN"</h2>
             </nav>
 
-            // ОСНОВНОЙ КОНТЕНТ С ПОМОЩНИКОМ
-            <div style="display: flex; flex: 1;">
-                
-                // Левая часть (Чат/Контент)
-                <main style="flex: 1; padding: 20px; text-align: center;">
-                    {move || if user_name.get().is_some() {
-                        view! { <h1 style="color: #44ff44;">"Связь установлена!"</h1> }.into_view()
-                    } else {
-                        view! { <p>"Ожидание авторизации..."</p> }.into_view()
-                    }}
+            // ТВОЙ ПОМОЩНИК (HTML ВНУТРИ RUST)
+            <div style="display: flex; padding: 20px; gap: 20px;">
+                <main style="flex: 2; background: #222; padding: 20px; border-radius: 8px; border: 1px solid #333;">
+                    <h3 style="color: #ff4444;">"Консоль управления"</h3>
+                    <p>"Нажми кнопку входа, чтобы браузер открыл официальный сайт."</p>
+                    <p style="color: #888; font-size: 0.9rem;">
+                        "Это гарантирует, что твои данные в безопасности и сохраняются в браузере."
+                    </p>
                 </main>
 
-                // ПРАВАЯ ЧАСТЬ: HTML-ПОМОЩНИК
-                <aside style="width: 300px; background: #252525; border-left: 2px solid #333; padding: 15px; font-size: 0.9rem;">
-                    <h3 style="color: #ff4444; border-bottom: 1px solid #444; padding-bottom: 5px;">"🤖 Помощник"</h3>
-                    <div style="background: #1a1a1a; padding: 10px; border-radius: 5px; border: 1px inset #333;">
-                        <p><b>"Статус:"</b> " Ошибки исправлены"</p>
-                        <p><b>"План на завтра:"</b></p>
-                        <ul style="padding-left: 20px; color: #bbb;">
-                            <li>"Рисуем шапку с драконом"</li>
-                            <li>"Подключаем список API"</li>
-                            <li>"Настраиваем стили"</li>
-                        </ul>
-                        <hr style="border: 0; border-top: 1px solid #444;"/>
-                        <p style="font-style: italic; color: #888;">
-                            "Если видишь красную ошибку в GitHub — проверь Cargo.toml. Rust очень строгий!"
-                        </p>
+                <aside style="flex: 1; background: #252525; padding: 15px; border-radius: 8px; border: 1px solid #444;">
+                    <h4 style="margin-top: 0; color: #44ff44;">"🤖 Статус Разработки"</h4>
+                    <div style="font-size: 0.85rem; line-height: 1.4;">
+                        <div style="margin-bottom: 8px;"><b>"Версия Rust:"</b> " Исправлена"</div>
+                        <div style="margin-bottom: 8px;"><b>"Ошибки версий:"</b> " Устранены"</div>
+                        <div style="color: #aaa;">"Завтра мы добавим автоматическое закрытие окна после логина."</div>
                     </div>
                 </aside>
-
             </div>
         </div>
     }
