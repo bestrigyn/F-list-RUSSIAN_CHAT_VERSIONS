@@ -11,7 +11,5 @@ wasm-bindgen = "0.2"
 version = "0.3"
 features = [
   "Window",
-  "Document",
-  "Element",
-  "HtmlElement"
+  "Storage"
 ]
