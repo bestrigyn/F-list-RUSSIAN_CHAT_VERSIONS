@@ -1,30 +1,46 @@
-// Добавь эти сигналы в начало функции App
-let (account, set_account) = create_signal(String::new());
-let (password, set_password) = create_signal(String::new());
-let (is_loading, set_is_loading) = create_signal(false);
+use leptos::*;
 
-// В Header, там где была кнопка "Вход", замени на это:
-{move || match user_name.get() {
-    None => view! {
-        <div style="display: flex; gap: 5px;">
-            <input type="text" placeholder="Логин" 
-                on:input=move |ev| set_account.set(event_value(&ev))
-                style="background: #333; border: 1px solid #555; color: white; padding: 2px 5px; width: 100px;"/>
-            <input type="password" placeholder="Пароль" 
-                on:input=move |ev| set_password.set(event_value(&ev))
-                style="background: #333; border: 1px solid #555; color: white; padding: 2px 5px; width: 100px;"/>
-            <button 
-                on:click=move |_| {
-                    set_is_loading.set(true);
-                    // СЮДА мы завтра пропишем fetch запрос к API f-list
-                    log!("Попытка входа для: {}", account.get());
-                }
-                style="background: #ff4444; color: white; border: none; padding: 2px 10px; cursor: pointer;">
-                {move || if is_loading.get() { "..." } else { "Войти" }}
-            </button>
+#[component]
+fn App() -> impl IntoView {
+    let (account, set_account) = create_signal(String::new());
+    let (password, set_password) = create_signal(String::new());
+    let (user_name, set_user_name) = create_signal(None::<String>);
+
+    view! {
+        <div style="background: #1b1b1b; color: #e0e0e0; min-height: 100vh; font-family: sans-serif;">
+            <nav style="display: flex; justify-content: space-between; padding: 10px; background: #2a2a2a; border-bottom: 2px solid #ff4444;">
+                <div>
+                    {move || match user_name.get() {
+                        None => view! {
+                            <div style="display: flex; gap: 5px;">
+                                <input type="text" placeholder="Логин" 
+                                    on:input=move |ev| set_account.set(event_value(&ev))
+                                    style="background: #333; color: white; border: 1px solid #555;"/>
+                                <input type="password" placeholder="Пароль" 
+                                    on:input=move |ev| set_password.set(event_value(&ev))
+                                    style="background: #333; color: white; border: 1px solid #555;"/>
+                                <button on:click=move |_| set_user_name.set(Some(account.get()))
+                                    style="background: #ff4444; border: none; color: white; cursor: pointer;">
+                                    "Войти"
+                                </button>
+                            </div>
+                        }.into_view(),
+                        Some(name) => view! {
+                            <span>"Привет, " {name} "!"</span>
+                        }.into_view(),
+                    }}
+                </div>
+                <h2 style="margin: 0;">"RUSSIAN CHAT"</h2>
+                <div>
+                    {move || user_name.get().is_some().then(|| view! {
+                        <button on:click=move |_| set_user_name.set(None)>"Выход"</button>
+                    })}
+                </div>
+            </nav>
         </div>
-    }.into_view(),
-    Some(name) => view! {
-        <span style="font-weight: bold; color: #ff4444;">{name}</span>
-    }.into_view(),
-}}
+    }
+}
+
+fn main() {
+    mount_to_body(App);
+}
