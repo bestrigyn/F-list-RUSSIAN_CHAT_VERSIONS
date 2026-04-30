@@ -16,5 +16,7 @@ version = "0.3"
 features = [
   "Window",
   "Storage",
-  "Location"
+  "Location",
+  "Document",
+  "HtmlDocument"
 ]
