@@ -1,36 +1,36 @@
 use leptos::*;
 use wasm_bindgen::prelude::*;
+use web_sys::MessageEvent;
 
 #[component]
 fn App() -> impl IntoView {
-    // Состояние для хранения Email
     let (user_email, set_user_email) = create_signal(None::<String>);
 
-    // Эффект для автоматического закрытия окна и подхвата данных
+    // Слушатель сообщений от нашего HTML-помощника
     create_effect(move |_| {
         let window = window();
-        let location = window.location();
-        let search = location.search().unwrap_or_default();
         
-        // Если в ссылке появилось подтверждение возврата
-        if search.contains("redirect=1") || search.contains("account") {
-            // Ставим заглушку Email (в реальном API тут будет запрос к f-list)
-            set_user_email.set(Some("user@f-list.net".to_string()));
-            
-            // ЗАКРЫВАЕМ ОКНО
-            let _ = window.close();
-        }
+        let cb = Closure::wrap(Box::new(move |e: MessageEvent| {
+            if let Some(data) = e.data().as_string() {
+                if data == "f_list_login_success" {
+                    // Как только получили сигнал — ставим Email (заглушку)
+                    set_user_email.set(Some("semen_dev@f-list.net".to_string()));
+                }
+            }
+        }) as Box<dyn FnMut(MessageEvent)>);
+
+        let _ = window.add_event_listener_with_callback("message", cb.as_ref().unchecked_ref());
+        cb.forget();
     });
 
     let open_login_window = move |_| {
-        // Твой сайт, куда нужно вернуться
-        let my_site = "https://bestrigyn.github.io/F-list-RUSSIAN_CHAT_VERSIONS/?redirect=1";
-        let encoded_site = js_sys::encode_uri_component(my_site);
+        // Указываем F-list вернуть нас на наш НОВЫЙ файл помощник
+        let callback_url = "https://bestrigyn.github.io/F-list-RUSSIAN_CHAT_VERSIONS/callback.html";
+        let encoded_callback = js_sys::encode_uri_component(callback_url);
         
-        // Ссылка сразу на настройки, где есть Email
         let login_url = format!(
             "https://www.f-list.net/login.php?redirect={}",
-            String::from(encoded_site)
+            String::from(encoded_callback)
         );
 
         let _ = window().open_with_url_and_target_and_features(
@@ -52,7 +52,7 @@ fn App() -> impl IntoView {
                             </button>
                         }.into_view(),
                         Some(email) => view! {
-                            <span style="color: #4cd137; font-weight: bold;">"Email: " {email}</span>
+                            <span style="color: #4cd137; font-weight: bold;">"Аккаунт: " {email}</span>
                         }.into_view(),
                     }}
                 </div>
@@ -62,13 +62,13 @@ fn App() -> impl IntoView {
                 {move || if user_email.get().is_none() {
                     view! { 
                         <div>
-                            <h1>"Окно авторизации"</h1>
-                            <p>"Нажмите вход. После логина на F-list окно закроется автоматически."</p>
+                            <h1>"Система авторизации"</h1>
+                            <p>"Используем HTML-помощник для обхода блокировки F-list."</p>
                         </div>
                     }.into_view()
                 } else {
                     view! { 
-                        <h1 style="color: #4cd137;">"Авторизация по Email успешна!"</h1> 
+                        <h1 style="color: #4cd137;">"Связь установлена!"</h1> 
                     }.into_view()
                 }}
             </main>
