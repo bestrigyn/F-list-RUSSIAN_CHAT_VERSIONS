@@ -18,6 +18,5 @@ features = [
   "HtmlDocument",
   "Location",
   "MessageEvent",
-  "Element",
-  "Reflect"
+  "Element"
 ]
