@@ -12,19 +12,16 @@ struct LoginData {
 fn App() -> impl IntoView {
     let (user_name, set_user_name) = create_signal(None::<String>);
 
-    // Настоящий слушатель событий
+    // Слушаем сообщение от callback.html
     create_effect(move |_| {
         let window = window();
         let cb = Closure::wrap(Box::new(move |e: MessageEvent| {
-            // Пытаемся распарсить данные из JS
-            if let Ok(js_data) = e.data().dyn_into::<js_sys::Object>() {
-                // Если в объекте есть поле 'user', значит это наш успех
-                let user = js_sys::Reflect::get(&js_data, &"user".into())
-                    .unwrap_or_default()
-                    .as_string();
-                
-                if let Some(name) = user {
-                    set_user_name.set(Some(name));
+            // Проверяем данные через JS Reflection, чтобы достать ник
+            if let Ok(js_obj) = e.data().dyn_into::<js_sys::Object>() {
+                if let Ok(user_val) = js_sys::Reflect::get(&js_obj, &"user".into()) {
+                    if let Some(name) = user_val.as_string() {
+                        set_user_name.set(Some(name));
+                    }
                 }
             }
         }) as Box<dyn FnMut(MessageEvent)>);
@@ -33,34 +30,57 @@ fn App() -> impl IntoView {
         cb.forget();
     });
 
-    let login = move |_| {
+    let open_login = move |_| {
         let callback = "https://bestrigyn.github.io/F-list-RUSSIAN_CHAT_VERSIONS/callback.html";
-        // Важно: F-list требует именно такой формат для редиректа
-        let url = format!("https://www.f-list.net/login.php?redirect={}", js_sys::encode_uri_component(callback));
-        
+        let login_url = format!(
+            "https://www.f-list.net/login.php?redirect={}",
+            js_sys::encode_uri_component(callback)
+        );
+
         let _ = window().open_with_url_and_target_and_features(
-            &url, "auth", "width=500,height=600"
+            &login_url,
+            "f_list_auth",
+            "width=500,height=600"
         );
     };
 
     view! {
-        <div style="background: #000; color: #fff; min-height: 100vh; font-family: 'Segoe UI', sans-serif;">
-            <nav style="background: #111; padding: 15px; border-bottom: 2px solid #f00; display: flex; justify-content: space-between;">
-                <h2 style="margin:0;">"F-LIST REAL AUTH"</h2>
+        <div style="background: #000; color: #fff; min-height: 100vh; font-family: sans-serif;">
+            <nav style="background: #1a1a1a; padding: 20px; border-bottom: 2px solid #f00; display: flex; justify-content: space-between;">
+                <h2 style="margin: 0; color: #f00;">"F-LIST RUSSIAN CHAT"</h2>
                 {move || match user_name.get() {
-                    None => view! { <button on:click=login style="background:#f00; color:#fff; border:none; padding:10px; cursor:pointer;">"ВОЙТИ"</button> }.into_view(),
-                    Some(name) => view! { <b style="color:#0f0;">"В СЕТИ: " {name}</b> }.into_view(),
+                    None => view! {
+                        <button on:click=open_login style="background: #f00; color: #fff; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; border-radius: 4px;">
+                            "ВОЙТИ / LOGIN"
+                        </button>
+                    }.into_view(),
+                    Some(name) => view! {
+                        <span style="color: #0f0; font-weight: bold;">"В СЕТИ: " {name}</span>
+                    }.into_view(),
                 }}
             </nav>
-            <main style="padding: 40px; text-align: center;">
+
+            <main style="padding: 60px; text-align: center;">
                 {move || if let Some(name) = user_name.get() {
-                    view! { <h3>"Привет, " {name} "! Теперь всё по-честному."</h3> }.into_view()
+                    view! {
+                        <div style="border: 2px solid #0f0; padding: 20px; display: inline-block;">
+                            <h1 style="color: #0f0;">"ДОСТУП ОТКРЫТ"</h1>
+                            <p>"Добро пожаловать, " {name} "!"</p>
+                        </div>
+                    }.into_view()
                 } else {
-                    view! { <p>"Нажми войти, чтобы авторизоваться через официальный F-list."</p> }.into_view()
+                    view! {
+                        <div>
+                            <h1>"АВТОРИЗАЦИЯ"</h1>
+                            <p style="color: #888;">"Нажмите кнопку выше, чтобы войти через официальный сайт F-list."</p>
+                        </div>
+                    }.into_view()
                 }}
             </main>
         </div>
     }
 }
 
-fn main() { mount_to_body(App); }
+fn main() {
+    mount_to_body(App);
+}
