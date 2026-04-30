@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Авторизация...</title>
+</head>
+<body style="background: #121212; color: white; font-family: sans-serif; text-align: center; padding-top: 50px;">
+    <h2>Вход выполнен!</h2>
+    <p>Это окно закроется автоматически...</p>
+
+    <script>
+        // Передаем сигнал в основное окно, что мы залогинились
+        if (window.opener) {
+            window.opener.postMessage("f_list_login_success", "*");
+        }
+        
+        // Закрываем это окно через 1 секунду
+        setTimeout(() => {
+            window.close();
+        }, 1000);
+    </script>
+</body>
+</html>
