@@ -6,17 +6,14 @@ edition = "2021"
 [dependencies]
 leptos = { version = "0.6", features = ["csr"] }
 wasm-bindgen = "0.2"
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-reqwest = { version = "0.11", features = ["json"] }
 js-sys = "0.3"
 
 [dependencies.web-sys]
 version = "0.3"
 features = [
   "Window",
-  "Storage",
   "Location",
   "Document",
-  "HtmlDocument"
+  "HtmlDocument",
+  "Element"
 ]
