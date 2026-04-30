@@ -10,7 +10,7 @@ fn App() -> impl IntoView {
     create_effect(move |_| {
         let window = window();
         let location = window.location();
-        // Проверяем, вернулись ли мы с билетом от F-list
+        // Проверяем, вернулись ли мы с билетом от F-list1
         if let Ok(search) = location.search() {
             if search.contains("ticket=") || search.contains("account=") {
                 // Если мы тут, значит логин прошел. Ставим ник.
