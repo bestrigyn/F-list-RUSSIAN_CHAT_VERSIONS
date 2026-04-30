@@ -1,22 +1,21 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <title>Авторизация...</title>
-</head>
+<head><title>Авторизация...</title></head>
 <body style="background: #121212; color: white; font-family: sans-serif; text-align: center; padding-top: 50px;">
-    <h2>Вход выполнен!</h2>
-    <p>Это окно закроется автоматически...</p>
-
+    <h2 id="status">Проверка данных...</h2>
     <script>
-        // Передаем сигнал в основное окно, что мы залогинились
-        if (window.opener) {
-            window.opener.postMessage("f_list_login_success", "*");
+        // Достаем параметры из ссылки (f-list их туда допишет)
+        const urlParams = new URLSearchParams(window.location.search);
+        const account = urlParams.get('account');
+
+        if (account && window.opener) {
+            // Передаем реальный ник в главное окно
+            window.opener.postMessage({ type: "f_list_success", user: account }, "*");
+            document.getElementById('status').innerText = "Готово! Вход выполнен как " + account;
+            setTimeout(() => window.close(), 1200);
+        } else {
+            document.getElementById('status').innerText = "Ошибка: Данные не получены.";
         }
-        
-        // Закрываем это окно через 1 секунду
-        setTimeout(() => {
-            window.close();
-        }, 1000);
     </script>
 </body>
 </html>
