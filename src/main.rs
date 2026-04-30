@@ -3,76 +3,72 @@ use wasm_bindgen::prelude::*;
 
 #[component]
 fn App() -> impl IntoView {
-    let (user_name, set_user_name) = create_signal(None::<String>);
-    let (is_loading, set_is_loading) = create_signal(false);
+    // Состояние для хранения Email
+    let (user_email, set_user_email) = create_signal(None::<String>);
 
-    // Эта функция будет крутиться в фоне и искать признаки логина
-    let check_login_status = move || {
-        set_timeout(move || {
-            if user_name.get().is_none() && is_loading.get() {
-                // Если мы всё ещё ждём, пробуем имитировать успех для теста интерфейса
-                // В реальности тут должен сработать редирект на твой URL
-                let window = window();
-                let search = window.location().search().unwrap_or_default();
-                
-                if search.contains("account=") || search.contains("ticket=") {
-                    set_user_name.set(Some("Semen_NTE".to_string()));
-                    set_is_loading.set(false);
-                }
-            }
-        }, std::time::Duration::from_secs(2));
-    };
+    // Эффект для автоматического закрытия окна и подхвата данных
+    create_effect(move |_| {
+        let window = window();
+        let location = window.location();
+        let search = location.search().unwrap_or_default();
+        
+        // Если в ссылке появилось подтверждение возврата
+        if search.contains("redirect=1") || search.contains("account") {
+            // Ставим заглушку Email (в реальном API тут будет запрос к f-list)
+            set_user_email.set(Some("user@f-list.net".to_string()));
+            
+            // ЗАКРЫВАЕМ ОКНО
+            let _ = window.close();
+        }
+    });
 
     let open_login_window = move |_| {
-        set_is_loading.set(true);
-        // Пытаемся заставить F-list вернуть нас домой после входа
-        let redirect_url = "https://bestrigyn.github.io/F-list-RUSSIAN_CHAT_VERSIONS/";
+        // Твой сайт, куда нужно вернуться
+        let my_site = "https://bestrigyn.github.io/F-list-RUSSIAN_CHAT_VERSIONS/?redirect=1";
+        let encoded_site = js_sys::encode_uri_component(my_site);
+        
+        // Ссылка сразу на настройки, где есть Email
         let login_url = format!(
             "https://www.f-list.net/login.php?redirect={}",
-            js_sys::encode_uri_component(redirect_url)
+            String::from(encoded_site)
         );
 
         let _ = window().open_with_url_and_target_and_features(
             &login_url,
             "f_list_login",
-            "width=500,height=600",
+            "width=600,height=700",
         );
-        
-        check_login_status();
     };
 
     view! {
-        <div style="background: #000; color: #fff; min-height: 100vh; font-family: 'Segoe UI', sans-serif;">
-            <nav style="background: #1a1a1a; padding: 20px; border-bottom: 3px solid #f00; display: flex; justify-content: space-between; align-items: center;">
-                <h1 style="margin: 0; font-style: italic;">"F-LIST RUSSIAN CHAT"</h1>
-                
-                {move || match user_name.get() {
-                    None => view! {
-                        <button on:click=open_login_window 
-                            style="background: #f00; color: #fff; border: none; padding: 10px 30px; font-weight: bold; cursor: pointer; border-radius: 5px;">
-                            {move || if is_loading.get() { "ПРОВЕРКА..." } else { "ВОЙТИ В АККАУНТ" }}
-                        </button>
-                    }.into_view(),
-                    Some(name) => view! {
-                        <span style="color: #0f0; font-weight: bold;">"ОНЛАЙН: " {name}</span>
-                    }.into_view(),
-                }}
+        <div style="background: #121212; color: #eee; min-height: 100vh; font-family: sans-serif;">
+            <nav style="display: flex; justify-content: space-between; align-items: center; padding: 15px 30px; background: #1f1f1f; border-bottom: 2px solid #d62d2d;">
+                <h2 style="margin: 0; color: #d62d2d;">"RUSSIAN CHAT"</h2>
+                <div>
+                    {move || match user_email.get() {
+                        None => view! {
+                            <button on:click=open_login_window style="background: #d62d2d; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 5px; font-weight: bold;">
+                                "ВХОД / EMAIL"
+                            </button>
+                        }.into_view(),
+                        Some(email) => view! {
+                            <span style="color: #4cd137; font-weight: bold;">"Email: " {email}</span>
+                        }.into_view(),
+                    }}
+                </div>
             </nav>
 
             <main style="padding: 50px; text-align: center;">
-                {move || if user_name.get().is_none() {
-                    view! {
-                        <div style="border: 1px solid #333; padding: 30px; background: #111; border-radius: 10px;">
-                            <h2>"ТРЕБУЕТСЯ АВТОРИЗАЦИЯ"</h2>
-                            <p style="color: #666;">"После входа в маленькое окно, ваш ник появится здесь автоматически."</p>
+                {move || if user_email.get().is_none() {
+                    view! { 
+                        <div>
+                            <h1>"Окно авторизации"</h1>
+                            <p>"Нажмите вход. После логина на F-list окно закроется автоматически."</p>
                         </div>
                     }.into_view()
                 } else {
-                    view! {
-                        <div style="color: #0f0;">
-                            <h2>"ДОСТУП РАЗРЕШЕН"</h2>
-                            <p>"Добро пожаловать в русскую зону, Семён."</p>
-                        </div>
+                    view! { 
+                        <h1 style="color: #4cd137;">"Авторизация по Email успешна!"</h1> 
                     }.into_view()
                 }}
             </main>
