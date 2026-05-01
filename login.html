@@ -1,27 +1,27 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
     <meta charset="UTF-8">
-    <title>Вход в F-list</title>
+    <title>F-LIST LOGIN</title>
     <style>
-        body { background: #121212; color: white; font-family: sans-serif; text-align: center; padding: 20px; }
-        input { padding: 10px; margin: 10px; width: 80%; border-radius: 5px; border: 1px solid #333; background: #222; color: white; }
-        button { padding: 10px 20px; background: #d62d2d; color: white; border: none; cursor: pointer; border-radius: 5px; font-weight: bold; }
+        body { background: #121212; color: white; font-family: sans-serif; text-align: center; padding: 40px; }
+        input { background: #222; border: 1px solid #444; color: white; padding: 10px; width: 80%; margin-bottom: 20px; }
+        button { background: #d62d2d; color: white; border: none; padding: 10px 30px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
-    <h3>Вход в систему</h3>
-    <p>Введите ваш ник на F-list</p>
-    <input type="text" id="username" placeholder="Ваш ник">
+    <h2 style="color:#d62d2d;">F-LIST LOGIN</h2>
+    <p>Введите ваш ник:</p>
+    <input type="text" id="username" placeholder="bestrigyn1">
     <br>
-    <button onclick="sendToRust()">ВОЙТИ</button>
+    <button onclick="auth()">ВОЙТИ</button>
 
     <script>
-        function sendToRust() {
+        function auth() {
             const user = document.getElementById('username').value;
-            if (user && window.opener) {
-                // Передаем реальные данные в главное окно Rust
-                window.opener.postMessage({ type: "LOGIN_SUCCESS", account: user }, "*");
+            if (user) {
+                // Это передает данные в Rust
+                window.opener.postMessage({ account: user }, "*");
                 window.close();
             }
         }
