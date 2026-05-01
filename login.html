@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Вход в F-list</title>
+    <style>
+        body { background: #121212; color: white; font-family: sans-serif; text-align: center; padding: 20px; }
+        input { padding: 10px; margin: 10px; width: 80%; border-radius: 5px; border: 1px solid #333; background: #222; color: white; }
+        button { padding: 10px 20px; background: #d62d2d; color: white; border: none; cursor: pointer; border-radius: 5px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h3>Вход в систему</h3>
+    <p>Введите ваш ник на F-list</p>
+    <input type="text" id="username" placeholder="Ваш ник">
+    <br>
+    <button onclick="sendToRust()">ВОЙТИ</button>
+
+    <script>
+        function sendToRust() {
+            const user = document.getElementById('username').value;
+            if (user && window.opener) {
+                // Передаем реальные данные в главное окно Rust
+                window.opener.postMessage({ type: "LOGIN_SUCCESS", account: user }, "*");
+                window.close();
+            }
+        }
+    </script>
+</body>
+</html>
