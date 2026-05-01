@@ -1,25 +1,20 @@
 use leptos::*;
 use wasm_bindgen::prelude::*;
 use web_sys::MessageEvent;
-use serde::{Deserialize, Serialize};
-
-#[derive(Clone, Serialize, Deserialize)]
-struct LoginData {
-    user: String,
-}
 
 #[component]
 fn App() -> impl IntoView {
     let (user_name, set_user_name) = create_signal(None::<String>);
 
-    // Слушаем сообщение от callback.html
+    // Слушаем данные от нашей формы
     create_effect(move |_| {
         let window = window();
         let cb = Closure::wrap(Box::new(move |e: MessageEvent| {
-            // Проверяем данные через JS Reflection, чтобы достать ник
+            // Пытаемся достать объект из события
             if let Ok(js_obj) = e.data().dyn_into::<js_sys::Object>() {
-                if let Ok(user_val) = js_sys::Reflect::get(&js_obj, &"user".into()) {
-                    if let Some(name) = user_val.as_string() {
+                // Извлекаем поле 'account'
+                if let Ok(val) = js_sys::Reflect::get(&js_obj, &"account".into()) {
+                    if let Some(name) = val.as_string() {
                         set_user_name.set(Some(name));
                     }
                 }
@@ -30,51 +25,37 @@ fn App() -> impl IntoView {
         cb.forget();
     });
 
-    let open_login = move |_| {
-        let callback = "https://bestrigyn.github.io/F-list-RUSSIAN_CHAT_VERSIONS/callback.html";
-        let login_url = format!(
-            "https://www.f-list.net/login.php?redirect={}",
-            js_sys::encode_uri_component(callback)
-        );
-
+    let open_auth = move |_| {
         let _ = window().open_with_url_and_target_and_features(
-            &login_url,
-            "f_list_auth",
-            "width=500,height=600"
+            "login.html", // Открываем нашу простую форму
+            "auth_window",
+            "width=400,height=300"
         );
     };
 
     view! {
-        <div style="background: #000; color: #fff; min-height: 100vh; font-family: sans-serif;">
-            <nav style="background: #1a1a1a; padding: 20px; border-bottom: 2px solid #f00; display: flex; justify-content: space-between;">
-                <h2 style="margin: 0; color: #f00;">"F-LIST RUSSIAN CHAT"</h2>
-                {move || match user_name.get() {
-                    None => view! {
-                        <button on:click=open_login style="background: #f00; color: #fff; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; border-radius: 4px;">
-                            "ВОЙТИ / LOGIN"
-                        </button>
-                    }.into_view(),
-                    Some(name) => view! {
-                        <span style="color: #0f0; font-weight: bold;">"В СЕТИ: " {name}</span>
-                    }.into_view(),
-                }}
+        <div style="background: #000; color: #eee; min-height: 100vh; font-family: sans-serif;">
+            <nav style="background: #1a1a1a; padding: 15px; border-bottom: 2px solid #d62d2d; display: flex; justify-content: space-between;">
+                <h2 style="margin: 0; color: #d62d2d;">"F-LIST RUSSIAN"</h2>
+                <div>
+                    {move || match user_name.get() {
+                        None => view! { 
+                            <button on:click=open_auth style="background: #d62d2d; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 5px;">
+                                "ВХОД"
+                            </button> 
+                        }.into_view(),
+                        Some(name) => view! { 
+                            <b style="color: #4cd137;">"В СЕТИ: " {name}</b> 
+                        }.into_view(),
+                    }}
+                </div>
             </nav>
 
-            <main style="padding: 60px; text-align: center;">
+            <main style="padding: 50px; text-align: center;">
                 {move || if let Some(name) = user_name.get() {
-                    view! {
-                        <div style="border: 2px solid #0f0; padding: 20px; display: inline-block;">
-                            <h1 style="color: #0f0;">"ДОСТУП ОТКРЫТ"</h1>
-                            <p>"Добро пожаловать, " {name} "!"</p>
-                        </div>
-                    }.into_view()
+                    view! { <h3>"Привет, " {name} "! Теперь связь с Rust работает реально."</h3> }.into_view()
                 } else {
-                    view! {
-                        <div>
-                            <h1>"АВТОРИЗАЦИЯ"</h1>
-                            <p style="color: #888;">"Нажмите кнопку выше, чтобы войти через официальный сайт F-list."</p>
-                        </div>
-                    }.into_view()
+                    view! { <p>"Нажми кнопку входа для авторизации."</p> }.into_view()
                 }}
             </main>
         </div>
