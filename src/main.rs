@@ -27,7 +27,7 @@ fn App() -> impl IntoView {
 
     let open_auth = move |_| {
         let _ = window().open_with_url_and_target_and_features(
-            "login.html", // Открываем нашу простую форму
+            "login.html", // Открываем нашу простую форму1
             "auth_window",
             "width=400,height=300"
         );
